@@ -1,0 +1,10 @@
+.envrc
+.env
+abi.json
+contract-addresses.json
+node_modules
+.openzeppelin
+
+#Hardhat files
+cache
+artifacts
