@@ -1,6 +1,6 @@
 pragma solidity 0.6.12;
 
-import "usingtellor/contracts/UsingTellor.sol";
+import "./lib/UsingTellor.sol";
 
 contract TvlOracle is UsingTellor {
 
@@ -27,7 +27,8 @@ contract TvlOracle is UsingTellor {
     uint _timestamp;
     uint256 _value;
 
-    (_didGet, _value, _timestamp) = getCurrentValue(requestId);
+    //(_didGet, _value, _timestamp) = getCurrentValue(requestId);
+    (_didGet, _value, _timestamp) = getDataBefore(requestId, now - 30 minutes);
     _value = _value * (10 ** (uint256(desiredDecimals - externalOracleDecimals)));
     return (_value, _didGet);
   }

@@ -27,12 +27,12 @@
     "ethereum-waffle": "^3.1.1",
     "ethers": "^5.0.18",
     "hardhat": "^2.0.5",
-    "stochasm": "^0.5.0",
-    "usingtellor": "^3.0.1"
+    "stochasm": "^0.5.0"
   },
   "scripts": {
     "test": "mocha"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {}
 }
