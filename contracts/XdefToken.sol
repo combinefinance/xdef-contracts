@@ -74,14 +74,14 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     mapping(address => bool) public transferPauseExemptList;
 
     function setTransfersPaused(bool _transfersPaused)
-        public
+        external
         onlyOwner
     {
         transfersPaused = _transfersPaused;
     }
 
     function setTransferPauseExempt(address user, bool exempt)
-        public
+        external
         onlyOwner
     {
         if (exempt) {
@@ -161,7 +161,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     }
 
     function sharesOf(address user)
-        public
+        external
         view
         returns (uint256)
     {
@@ -169,7 +169,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     }
 
     function mintShares(address recipient, uint256 amount)
-        public
+        external
     {
         require(msg.sender == monetaryPolicy, "forbidden");
         _shareBalances[recipient] = _shareBalances[recipient].add(amount);
@@ -177,7 +177,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     }
 
     function burnShares(address recipient, uint256 amount)
-        public
+        external
     {
         require(msg.sender == monetaryPolicy, "forbidden");
         require(_shareBalances[recipient] >= amount, "amount");
@@ -205,7 +205,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     }
 
     function setUserBanStatus(address user, bool banned)
-        public
+        external
         onlyOwner
     {
         if (banned) {

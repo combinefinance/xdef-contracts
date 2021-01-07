@@ -90,7 +90,7 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
     uint256 public totalCharityPercentOnContraction;
 
     function setXdefToken(address _Xdef)
-        public
+        external
         onlyOwner
     {
         Xdef = XdefToken(_Xdef);
