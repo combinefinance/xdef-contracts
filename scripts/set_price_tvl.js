@@ -8,14 +8,14 @@ async function main() {
     const TVL = 15909587343;
     const contracts = getSavedContractAddresses()[hre.network.name]
 
-    const tvlOracle = await ethers.getContractAt('MockOracle', contracts.tvlOracle);
-    const tokenPriceOracle = await ethers.getContractAt('Oracle', contracts.tokenPriceOracle);
+    const tvlOracle = await ethers.getContractAt('SimpleOracle', contracts.tvlOracle);
+    const tokenPriceOracle = await ethers.getContractAt('SimpleOracle', contracts.tokenPriceOracle);
     const owner = await tvlOracle.owner();
     console.log('owner:', owner);
-    const e18 = 1000000000000000000n;
-    (await tvlOracle.storeData(BigInt(TVL)*e18)).wait();
-    (await tokenPriceOracle.storeData(16n*e18/100n)).wait();
-    console.log('New values are set')
+    const e18 = BigInt(1000000000000000000);
+    (await tvlOracle.storeData(BigInt(TVL) * e18)).wait();
+    (await tokenPriceOracle.storeData(BigInt(19) * e18 / BigInt(100))).wait();
+    console.log('New values are set');
 }
 
 

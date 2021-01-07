@@ -5,13 +5,13 @@ const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 async function main() {
     await hre.run('compile')
 
-    const MockOracle = await ethers.getContractFactory('MockOracle')
-    const tvlOracle = await MockOracle.deploy('tvlOracle')
+    const SimpleOracle = await ethers.getContractFactory('SimpleOracle')
+    const tvlOracle = await SimpleOracle.deploy()
     await tvlOracle.deployed()
-    console.log('Market cap oracle deployed to:', tvlOracle.address)
+    console.log('TVL oracle deployed to:', tvlOracle.address)
     saveContractAddress(hre.network.name, 'tvlOracle', tvlOracle.address)
 
-    const tokenPriceOracle = await MockOracle.deploy('Token price oracle')
+    const tokenPriceOracle = await SimpleOracle.deploy()
     await tokenPriceOracle.deployed()
     console.log('Token price oracle deployed to:', tokenPriceOracle.address)
     saveContractAddress(hre.network.name, 'tokenPriceOracle', tokenPriceOracle.address)

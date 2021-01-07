@@ -1,4 +1,4 @@
-const hre = require('@nomiclabs/hardhat')
+const hre = require('hardhat')
 const { ethers, web3, upgrades } = hre
 const BigNumber = ethers.BigNumber
 const BN = require('bn.js')

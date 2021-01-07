@@ -28,19 +28,22 @@ async function main() {
 
     const xdefToken = await ethers.getContractAt('XdefToken', contracts.xdefToken);
     const xdefTokenDecimals = await xdefToken.decimals();
+    await xdefToken._mint('0x70997970c51812dc3a010c7d01b50e0d17dc79c8', BigInt(1));
+    console.log('minted');
 
-    (await xdefToken.approve(uniswap2RouterAddress, '115792089237316195423570985008687907853269984665640564039457')).wait();
+    //(await xdefToken.approve(uniswap2RouterAddress, '115792089237316195423570985008687907853269984665640564039457')).wait();
 
-    console.log('approved')
-    const uniswap2Router = (await ethers.getContractAt(UniswapV2RouterArtifact.abi, uniswap2RouterAddress));
+    //console.log('approved')
+    //const uniswap2Router = (await ethers.getContractAt(UniswapV2RouterArtifact.abi, uniswap2RouterAddress));
 
-    const overrides = {
-        value: ethers.utils.parseEther(ethAmount.toString(10))
-    };
+    //const overrides = {
+    //    value: ethers.utils.parseEther(ethAmount.toString(10))
+    //};
 
     // https://uniswap.org/docs/v2/smart-contracts/router02/#addliquidityeth
 
-    const tx = await (await uniswap2Router.addLiquidityETH(
+    /*
+    const tx = await (await uniswap2Router.swapExactLiquidityETH(
         contracts.xdefToken,
         BigInt(tokensToProvide) * BigInt(xdefTokenDecimals),
         0,
@@ -48,7 +51,7 @@ async function main() {
         signerAddr,
         2008545668,
         overrides)).wait();
-
+    */
     //console.log(tx)
     console.log('added liquidity to Uniswap');
     const WETHAddress = await uniswap2Router.WETH();

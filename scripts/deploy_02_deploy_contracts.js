@@ -5,18 +5,18 @@ const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 async function main() {
     await hre.run('compile')
 
-    const XdefToken = await ethers.getContractFactory('XdefToken')
-    const xdefToken = await upgrades.deployProxy(XdefToken, [])
-    await xdefToken.deployed()
-    console.log('XdefToken deployed to:', xdefToken.address)
-    saveContractAddress(hre.network.name, 'xdefToken', xdefToken.address)
-    
-    return
+    const contracts = getSavedContractAddresses()[hre.network.name]
+
+    const xdefToken = await ethers.getContractAt('XdefToken', contracts.xdefToken);
+
     const XdefTokenMonetaryPolicy = await ethers.getContractFactory('XdefTokenMonetaryPolicy')
     const xdefTokenMonetaryPolicy = await upgrades.deployProxy(XdefTokenMonetaryPolicy, [xdefToken.address])
     await xdefTokenMonetaryPolicy.deployed()
+
     console.log('XdefTokenMonetaryPolicy deployed to:', xdefTokenMonetaryPolicy.address)
     saveContractAddress(hre.network.name, 'xdefTokenMonetaryPolicy', xdefTokenMonetaryPolicy.address)
+    const deviationThreshold = BigInt(0.05 * 1e18) // 5%
+    await (await xdefTokenMonetaryPolicy.setDeviationThreshold(deviationThreshold)).wait()
 
     const XdefTokenOrchestrator = await ethers.getContractFactory('XdefTokenOrchestrator')
     const xdefTokenOrchestrator = await upgrades.deployProxy(XdefTokenOrchestrator, [xdefTokenMonetaryPolicy.address])
@@ -28,8 +28,6 @@ async function main() {
     console.log('XdefToken.setMonetaryPolicy(', xdefTokenMonetaryPolicy.address, ') succeeded')
     await (await xdefTokenMonetaryPolicy.setOrchestrator(xdefTokenOrchestrator.address)).wait()
     console.log('XdefTokenMonetaryPolicy.setOrchestrator(', xdefTokenOrchestrator.address, ') succeeded')
-
-    const contracts = getSavedContractAddresses()[hre.network.name]
 
     await (await xdefTokenMonetaryPolicy.setTvlOracle(contracts.tvlOracle)).wait()
     console.log('XdefTokenMonetaryPolicy.setTvlOracle(', contracts.tvlOracle, ') succeeded')
