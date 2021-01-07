@@ -15,7 +15,7 @@ async function main() {
         uint256 rebaseWindowOffsetSec_,
         uint256 rebaseWindowLengthSec_)
     */
-    (await xdefTokenMonetaryPolicy.setRebaseTimingParameters(60 * 60 * 4, 60 * 60 * 3, 60 * 60)).wait();
+    (await xdefTokenMonetaryPolicy.setRebaseTimingParameters(60 * 60 * 1, 60 * 50, 60 * 10)).wait();
     console.log('New values are set')
 }
 
