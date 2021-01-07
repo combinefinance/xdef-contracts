@@ -33,9 +33,14 @@ function objFormatEther(obj) {
     return result
 }
 
+const uniswap2FactoryAddress = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+const uniswap2RouterAddress = '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D';
+
 module.exports = {
     getSavedContractAddresses,
     saveContractAddress,
     saveJSON,
-    objFormatEther
+    objFormatEther,
+    uniswap2FactoryAddress,
+    uniswap2RouterAddress
 }

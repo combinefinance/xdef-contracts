@@ -4,6 +4,7 @@ abi.json
 contract-addresses.json
 node_modules
 .openzeppelin
+stuff
 
 #Hardhat files
 cache
