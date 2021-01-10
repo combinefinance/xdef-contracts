@@ -11,6 +11,15 @@ interface IOracle {
     function getData() external view returns (uint256, bool);
 }
 
+interface ISync {
+    function sync() external;
+}
+
+/*
+interface IGulp {
+    function gulp(address token) external;
+}
+*/
 
 /**
  * @title XdefToken Monetary Supply Policy
@@ -81,6 +90,8 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
     // This module orchestrates the rebase execution and downstream notification.
     address public orchestrator;
 
+    address[] public unipairs;
+
     function setXdefToken(address _Xdef)
         external
         onlyOwner
@@ -122,6 +133,7 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
 
         uint256 supplyAfterRebase = Xdef.rebase(epoch, supplyDelta);
         assert(supplyAfterRebase <= MAX_SUPPLY);
+        sync();
         emit LogRebase(epoch, tokenPrice, tvl, supplyDelta, now);
     }
 
@@ -151,6 +163,32 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
         return (supplyDelta, tvl, tokenPrice);
     }
 
+    function addUniPair(address addr)
+        external
+        onlyOwner
+    {
+        unipairs.push(addr);
+    }
+
+    function removeUniPair(address addr)
+        external
+        onlyOwner
+    {
+        for (uint i = 0; i < unipairs.length; i++) {
+            if (unipairs[i] == addr) {
+                unipairs[i] = unipairs[unipairs.length - 1];
+                unipairs.pop();
+                break;
+            }
+        }
+    }
+
+    function sync() public {
+        for (uint i = 0; i < unipairs.length; i++) {
+            ISync(unipairs[i]).sync(); 
+        }
+    }
+    
     /**
      * @notice Sets the reference to the market cap oracle.
      * @param tvlOracle_ The address of the tvl oracle contract.
@@ -240,14 +278,9 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
         rebaseWindowLengthSec = rebaseWindowLengthSec_;
     }
 
-    /**
-     * @dev ZOS upgradable contract initialization method.
-     *      It is called at the time of contract creation to invoke parent class initializers and
-     *      initialize the contract's state variables.
-     */
-    function initialize(XdefToken Xdef_)
+
+    constructor (XdefToken Xdef_)
         public
-        initializer
     {
         __Ownable_init();
 

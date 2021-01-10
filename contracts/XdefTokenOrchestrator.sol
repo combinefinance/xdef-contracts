@@ -31,9 +31,8 @@ contract XdefTokenOrchestrator is OwnableUpgradeSafe {
     /**
      * @param policy_ Address of the XdefToken policy.
      */
-    function initialize(address policy_)
+    constructor (address policy_)
         public
-        initializer
     {
         __Ownable_init();
         policy = XdefTokenMonetaryPolicy(policy_);

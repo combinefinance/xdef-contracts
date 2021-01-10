@@ -10,7 +10,7 @@ async function main() {
     const xdefToken = await ethers.getContractAt('XdefToken', contracts.xdefToken);
 
     const XdefTokenMonetaryPolicy = await ethers.getContractFactory('XdefTokenMonetaryPolicy')
-    const xdefTokenMonetaryPolicy = await upgrades.deployProxy(XdefTokenMonetaryPolicy, [xdefToken.address])
+    const xdefTokenMonetaryPolicy = await XdefTokenMonetaryPolicy.deploy(xdefToken.address)
     await xdefTokenMonetaryPolicy.deployed()
 
     console.log('XdefTokenMonetaryPolicy deployed to:', xdefTokenMonetaryPolicy.address)
@@ -19,7 +19,8 @@ async function main() {
     await (await xdefTokenMonetaryPolicy.setDeviationThreshold(deviationThreshold)).wait()
 
     const XdefTokenOrchestrator = await ethers.getContractFactory('XdefTokenOrchestrator')
-    const xdefTokenOrchestrator = await upgrades.deployProxy(XdefTokenOrchestrator, [xdefTokenMonetaryPolicy.address])
+    const xdefTokenOrchestrator = await XdefTokenOrchestrator.deploy(xdefTokenMonetaryPolicy.address)
+
     await xdefTokenOrchestrator.deployed()
     console.log('XdefTokenOrchestrator deployed to:', xdefTokenOrchestrator.address)
     saveContractAddress(hre.network.name, 'xdefTokenOrchestrator', xdefTokenOrchestrator.address)
