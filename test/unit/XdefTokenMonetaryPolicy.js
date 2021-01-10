@@ -47,7 +47,7 @@ async function setupContracts() {
     mockTvlOracle = mockTvlOracle.connect(deployer)
 
     const XdefTokenMonetaryPolicy = await ethers.getContractFactory('XdefTokenMonetaryPolicy')
-    xdefTokenMonetaryPolicy = await upgrades.deployProxy(XdefTokenMonetaryPolicy, [mockXdefToken.address, Xdef_TVL.toString()])
+    xdefTokenMonetaryPolicy = await upgrades.deployProxy(XdefTokenMonetaryPolicy, [mockXdefToken.address])
     await xdefTokenMonetaryPolicy.deployed()
     xdefTokenMonetaryPolicy = xdefTokenMonetaryPolicy.connect(deployer)
 
@@ -57,8 +57,12 @@ async function setupContracts() {
 }
 
 async function setupContractsWithOpenRebaseWindow() {
-    await setupContracts()
-    await awaitTx(xdefTokenMonetaryPolicy.setRebaseTimingParameters(60, 0, 60))
+    try {
+        await setupContracts()
+        await awaitTx(xdefTokenMonetaryPolicy.setRebaseTimingParameters(60, 0, 60))
+    } catch (e) {
+        console.error(e)
+    }
 }
 
 async function mockExternalData(rate, tvl, baseSupply, rateValidity = true, tvlValidity = true) {
@@ -490,15 +494,17 @@ describe('XdefTokenMonetaryPolicy:Rebase', async() => {
 
     describe('positive rate and no change TVL', () => {
         before(async() => {
-            await mockExternalData(INITIAL_RATE_30P_MORE, INITIAL_TVL, 1000)
-            await xdefTokenMonetaryPolicy.setRebaseTimingParameters(60, 0, 60)
-            await waitForSomeTime(p, 60)
-            await awaitTx(xdefTokenMonetaryPolicy.connect(orchestrator).rebase())
-            await waitForSomeTime(p, 59)
-            prevEpoch = await xdefTokenMonetaryPolicy.epoch()
-            prevTime = await xdefTokenMonetaryPolicy.lastRebaseTimestampSec()
-            await mockExternalData(INITIAL_RATE_60P_MORE, INITIAL_TVL, 1010)
-            r = await awaitTx(xdefTokenMonetaryPolicy.connect(orchestrator).rebase())
+            try {
+                await mockExternalData(INITIAL_RATE_30P_MORE, INITIAL_TVL, 1000)
+                await xdefTokenMonetaryPolicy.setRebaseTimingParameters(60, 0, 60)
+                await waitForSomeTime(p, 60)
+                await awaitTx(xdefTokenMonetaryPolicy.connect(orchestrator).rebase())
+                await waitForSomeTime(p, 59)
+                prevEpoch = await xdefTokenMonetaryPolicy.epoch()
+                prevTime = await xdefTokenMonetaryPolicy.lastRebaseTimestampSec()
+                await mockExternalData(INITIAL_RATE_60P_MORE, INITIAL_TVL, 1010)
+                r = await awaitTx(xdefTokenMonetaryPolicy.connect(orchestrator).rebase())
+            } catch (e) { console.error(e) }
         })
 
         it('should increment epoch', async() => {

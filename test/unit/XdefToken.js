@@ -46,8 +46,8 @@ describe('XdefToken:Initialization', () => {
     })
 
     it('should set detailed ERC20 parameters', async () => {
-        expect(await xdefToken.name()).to.equal('Base Protocol')
-        expect(await xdefToken.symbol()).to.equal('Xdef')
+        expect(await xdefToken.name()).to.equal('Xdef finance2')
+        expect(await xdefToken.symbol()).to.equal('Xdef2')
         expect(await xdefToken.decimals()).to.equal(DECIMALS)
     })
 
@@ -56,9 +56,9 @@ describe('XdefToken:Initialization', () => {
         expect(decimals).to.equal(DECIMALS)
     })
 
-    it('should have Xdef symbol', async () => {
+    it('should have Xdef2 symbol', async () => {
         const symbol = await xdefToken.symbol()
-        expect(symbol).to.equal('Xdef')
+        expect(symbol).to.equal('Xdef2')
     })
 })
 
