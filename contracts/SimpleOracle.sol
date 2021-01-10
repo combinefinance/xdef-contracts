@@ -5,6 +5,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 contract SimpleOracle is OwnableUpgradeSafe {
     uint256 private _value;
     
+    event LogValueUpdate(uint256 v);
+
     constructor() 
         public 
     {
@@ -25,5 +27,6 @@ contract SimpleOracle is OwnableUpgradeSafe {
         onlyOwner
     {
         _value = value;
+        emit LogValueUpdate(value);
     }
 }
