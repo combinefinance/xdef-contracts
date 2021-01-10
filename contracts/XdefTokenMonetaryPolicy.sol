@@ -81,14 +81,6 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
     // This module orchestrates the rebase execution and downstream notification.
     address public orchestrator;
 
-    address[] public charityRecipients;
-    mapping(address => bool)    public charityExists;
-    mapping(address => uint256) public charityIndex;
-    mapping(address => uint256) public charityPercentOnExpansion;
-    mapping(address => uint256) public charityPercentOnContraction;
-    uint256 public totalCharityPercentOnExpansion;
-    uint256 public totalCharityPercentOnContraction;
-
     function setXdefToken(address _Xdef)
         external
         onlyOwner
@@ -128,7 +120,6 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
             supplyDelta = (MAX_SUPPLY.sub(Xdef.totalSupply())).toInt256Safe();
         }
 
-        applyCharity(supplyDelta);
         uint256 supplyAfterRebase = Xdef.rebase(epoch, supplyDelta);
         assert(supplyAfterRebase <= MAX_SUPPLY);
         emit LogRebase(epoch, tokenPrice, tvl, supplyDelta, now);
@@ -158,80 +149,6 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
         // Apply the Dampening factor.
         supplyDelta = supplyDelta.div(rebaseLag.toInt256Safe());
         return (supplyDelta, tvl, tokenPrice);
-    }
-
-    function applyCharity(int256 supplyDelta)
-        private
-    {
-        uint256 totalCharityPercent = supplyDelta < 0 ? totalCharityPercentOnContraction
-                                                      : totalCharityPercentOnExpansion;
-
-        if (totalCharityPercent == 0) {
-            return;
-        }
-
-        uint256 totalCharitySupply = uint256(supplyDelta.abs()).mul(totalCharityPercent).div(100);
-        uint256 supplyAfterRebase = (supplyDelta < 0) ? Xdef.totalSupply().sub(uint256(supplyDelta.abs()))
-                                                      : Xdef.totalSupply().add(uint256(supplyDelta));
-
-        uint256 newSharesx1B =   Xdef.totalShares().mul(supplyAfterRebase)
-                        .div(//---------------------------------------------------------------
-                                      supplyAfterRebase.sub(totalCharitySupply)
-                         );
-        uint256 totalSharesDeltax1B = newSharesx1B.sub(Xdef.totalShares());
-
-        // Overflow protection without reverting.  If an overflow will occur, the charity program is finished.
-        if (Xdef.totalShares() + totalSharesDeltax1B < Xdef.totalShares()) {
-            return;
-        }
-
-        for (uint256 i = 0; i < charityRecipients.length; i++) {
-            address recipient = charityRecipients[i];
-            uint256 recipientPercent = supplyDelta < 0 ? charityPercentOnContraction[recipient]
-                                                       : charityPercentOnExpansion[recipient];
-            if (recipientPercent == 0) {
-                continue;
-            }
-
-            uint256 recipientSharesDelta = totalSharesDeltax1B.mul(1000000000).mul(recipientPercent).div(totalCharityPercent).div(1000000000);
-            Xdef.mintShares(recipient, recipientSharesDelta);
-        }
-    }
-
-    function addCharityRecipient(address addr, uint256 percentOnExpansion, uint256 percentOnContraction)
-        external
-        onlyOwner
-    {
-        require(totalCharityPercentOnExpansion.add(percentOnExpansion) <= 100, "expansion");
-        require(totalCharityPercentOnContraction.add(percentOnContraction) <= 100, "contraction");
-        require(charityExists[addr] == false, "already exists");
-
-        totalCharityPercentOnExpansion = totalCharityPercentOnExpansion.add(percentOnExpansion);
-        totalCharityPercentOnContraction = totalCharityPercentOnContraction.add(percentOnContraction);
-        charityExists[addr] = true;
-        charityIndex[addr] = charityRecipients.length;
-        charityPercentOnExpansion[addr] = percentOnExpansion;
-        charityPercentOnContraction[addr] = percentOnContraction;
-        charityRecipients.push(addr);
-    }
-
-    function removeCharityRecipient(address addr)
-        external
-        onlyOwner
-    {
-        require(charityExists[addr], "doesn't exist");
-        require(charityRecipients.length > 0, "spacetime has shattered");
-        require(charityRecipients.length - 1 >= charityIndex[addr], "too much cosmic radiation");
-
-        totalCharityPercentOnExpansion = totalCharityPercentOnExpansion.sub(charityPercentOnExpansion[addr]);
-        totalCharityPercentOnContraction = totalCharityPercentOnContraction.sub(charityPercentOnContraction[addr]);
-
-        charityRecipients[charityIndex[addr]] = charityRecipients[charityRecipients.length - 1];
-        charityRecipients.pop();
-        delete charityExists[addr];
-        delete charityIndex[addr];
-        delete charityPercentOnExpansion[addr];
-        delete charityPercentOnContraction[addr];
     }
 
     /**

@@ -53,7 +53,8 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
 
     uint256 private constant DECIMALS = 9;
     uint256 private constant MAX_UINT256 = ~uint256(0);
-    uint256 private constant INITIAL_SUPPLY = 19067164 * 10**DECIMALS;
+    //uint256 private constant INITIAL_SUPPLY = 50000000 * 10**DECIMALS;
+    uint256 private constant INITIAL_SUPPLY = 17500000 * 10**DECIMALS;
     uint256 private constant INITIAL_SHARES = (MAX_UINT256 / (10 ** 36)) - ((MAX_UINT256 / (10 ** 36)) % INITIAL_SUPPLY);
     uint256 private constant MAX_SUPPLY = ~uint128(0);  // (2^128) - 1
 
@@ -168,28 +169,10 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         return _shareBalances[user];
     }
 
-    function mintShares(address recipient, uint256 amount)
-        external
-    {
-        require(msg.sender == monetaryPolicy, "forbidden");
-        _shareBalances[recipient] = _shareBalances[recipient].add(amount);
-        _totalShares = _totalShares.add(amount);
-    }
-
-    function burnShares(address recipient, uint256 amount)
-        external
-    {
-        require(msg.sender == monetaryPolicy, "forbidden");
-        require(_shareBalances[recipient] >= amount, "amount");
-        _shareBalances[recipient] = _shareBalances[recipient].sub(amount);
-        _totalShares = _totalShares.sub(amount);
-    }
-
-    function initialize()
+    constructor ()
         public
-        initializer
     {
-        __ERC20_init("Xdef finance", "Xdef");
+        __ERC20_init("Xdef finance2", "Xdef2");
         _setupDecimals(uint8(DECIMALS));
         __Ownable_init();
 
@@ -197,9 +180,6 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         _totalSupply = INITIAL_SUPPLY;
         _shareBalances[owner()] = _totalShares;
         _sharesPerXdef = _totalShares.div(_totalSupply);
-
-        // Ban the Kucoin hacker
-        bannedUsers[0xeB31973E0FeBF3e3D7058234a5eBbAe1aB4B8c23] = true;
 
         emit Transfer(address(0x0), owner(), _totalSupply);
     }
