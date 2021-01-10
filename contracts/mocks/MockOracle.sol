@@ -18,9 +18,11 @@ contract MockOracle is Mock {
         returns (uint256, bool)
     {
         emit FunctionCalled(name, "getData", msg.sender);
+        /*
         uint256[] memory uintVals = new uint256[](0);
         int256[] memory intVals = new int256[](0);
         emit FunctionArguments(uintVals, intVals);
+        */
         return (_data, _validity);
     }
 

@@ -15,4 +15,7 @@ contract LPToken is ERC20UpgradeSafe {
 
     }
 
+    function mint(address account, uint256 amount) external {
+        _mint(account, amount);
+    }
 }
