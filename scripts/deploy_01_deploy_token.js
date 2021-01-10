@@ -6,7 +6,7 @@ async function main() {
     await hre.run('compile')
 
     const XdefToken = await ethers.getContractFactory('XdefToken')
-    const xdefToken = await upgrades.deployProxy(XdefToken, [])
+    const xdefToken = await XdefToken.deploy() //await upgrades.deployProxy(XdefToken, [])
     await xdefToken.deployed()
     console.log('XdefToken deployed to:', xdefToken.address)
     saveContractAddress(hre.network.name, 'xdefToken', xdefToken.address)

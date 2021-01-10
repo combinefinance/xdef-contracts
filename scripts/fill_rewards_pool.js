@@ -8,7 +8,7 @@ async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name]
     const dstAddress = contracts.geyser
     const xdefToken = await ethers.getContractAt('XdefToken', contracts.xdefToken);
-    (await xdefToken.transfer(dstAddress, BigInt(19067064 * 1e9))).wait();
+    (await xdefToken.transfer(dstAddress, BigInt(1067064 * 1e9))).wait();
     console.log('Sent Xdef tokens to geyser')
 }
 

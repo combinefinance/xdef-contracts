@@ -5,6 +5,8 @@ contract-addresses.json
 node_modules
 .openzeppelin
 stuff
+contracts-flat
+contracts/Geyser*
 
 #Hardhat files
 cache

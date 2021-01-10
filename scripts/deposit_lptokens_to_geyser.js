@@ -5,7 +5,7 @@ const { getSavedContractAddresses, saveContractAddress } = require('./utils')
 async function main() {
     await hre.run('compile')
 
-    const signers = (await ethers.getSigners()) //.slice(3, 4);
+    const signers = (await ethers.getSigners()).slice(0,3);
     const e18 = BigInt(1000000000000000000);
     const hrAmount = BigInt(1000);
     const amount = hrAmount * e18;
@@ -16,8 +16,8 @@ async function main() {
         try {
             const signerAddr = await signer.getAddress()
 
-            const lpToken = await ethers.getContractAt('ERC20UpgradeSafe', contracts.lpToken);
-            (await lpToken.connect(signer)._mint(signerAddr, amount)).wait();
+            const lpToken = await ethers.getContractAt('LPToken', contracts.lpToken);
+            (await lpToken.connect(signer).mint(signerAddr, amount)).wait();
             console.log(`lpTokens minted for ${signerAddr}`);
             (await lpToken.connect(signer).approve(contracts.geyser, amount)).wait();
             console.log(`lpTokens approved`);

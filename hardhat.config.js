@@ -34,11 +34,12 @@ module.exports = {
             },
             chainId: 31338
         },
-        mainnet: {
-            url: process.env.MAINNET_URL,
-            //gasPrice: 76000000000,
-            accounts: { mnemonic: process.env.MAINNET_MNEMONIC }
-        },
+	// Fix INITIAL_SUPPLY FIRST
+//        mainnet: {
+//            url: process.env.MAINNET_URL,
+//            //gasPrice: 76000000000,
+//            accounts: { mnemonic: process.env.MAINNET_MNEMONIC }
+//        },
         rinkeby: {
             url: process.env.RINKEBY_URL,
             accounts: { mnemonic: process.env.RINKEBY_MNEMONIC }
@@ -46,7 +47,7 @@ module.exports = {
     },
     etherscan: {
         apiKey: process.env.ETHERSCAN_APIKEY,
-        url: "https://api.etherscan.io/api"
+        url: "https://api-rinkeby.etherscan.io/api"
     },
     solidity: {
         compilers: [{
