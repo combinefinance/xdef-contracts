@@ -194,7 +194,7 @@ contract XdefToken is ERC20("xDEF Finance", "xDEF"), ERC677Token, Ownable {
      */
     function transfer(address to, uint256 value)
         public
-        override(ERC677)
+        override(ERC20, ERC677)
         validRecipient(to)
         returns (bool)
     {
