@@ -34,5 +34,7 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.3.0"
+  }
 }

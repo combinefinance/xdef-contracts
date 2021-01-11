@@ -17,7 +17,6 @@ abstract contract ERC677Token is ERC677 {
         returns (bool success)
     {
         transfer(_to, _value);
-        // emit Transfer(msg.sender, _to, _value, _data);
         if (isContract(_to)) {
             contractFallback(_to, _value, _data);
         }

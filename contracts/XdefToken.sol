@@ -1,11 +1,10 @@
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./lib/SafeMathInt.sol";
-import "./ERC20UpgradeSafe.sol";
 import "./ERC677Token.sol";
-
 
 /**
  * @title Xdef ERC20 token
@@ -17,7 +16,7 @@ import "./ERC677Token.sol";
  *      We support splitting the currency in expansion and combining the currency on contraction by
  *      changing the exchange rate between the hidden 'shares' and the public 'Xdef'.
  */
-contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
+contract XdefToken is ERC20("xDEF Finance", "xDEF"), ERC677Token, Ownable {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
@@ -53,10 +52,10 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
 
     uint256 private constant DECIMALS = 9;
     uint256 private constant MAX_UINT256 = ~uint256(0);
-    //uint256 private constant INITIAL_SUPPLY = 50000000 * 10**DECIMALS;
-    uint256 private constant INITIAL_SUPPLY = 17500000 * 10**DECIMALS;
-    uint256 private constant INITIAL_SHARES = (MAX_UINT256 / (10 ** 36)) - ((MAX_UINT256 / (10 ** 36)) % INITIAL_SUPPLY);
-    uint256 private constant MAX_SUPPLY = ~uint128(0);  // (2^128) - 1
+    uint256 private constant INITIAL_SUPPLY = 17000000 * 10**DECIMALS;
+    uint256 private constant INITIAL_SHARES =
+        (MAX_UINT256 / (10**36)) - ((MAX_UINT256 / (10**36)) % INITIAL_SUPPLY);
+    uint256 private constant MAX_SUPPLY = ~uint128(0);
 
     uint256 private _totalShares;
     uint256 private _totalSupply;
@@ -67,17 +66,25 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
 
     // This is denominated in XdefToken, because the shares-Xdef conversion might change before
     // it's fully paid.
-    mapping (address => mapping (address => uint256)) private _allowedXdef;
+    mapping(address => mapping(address => uint256)) private _allowedXdef;
 
     bool public transfersPaused;
     bool public rebasesPaused;
 
     mapping(address => bool) public transferPauseExemptList;
 
-    function setTransfersPaused(bool _transfersPaused)
-        external
-        onlyOwner
-    {
+    constructor() public {
+        _setupDecimals(uint8(DECIMALS));
+
+        _totalShares = INITIAL_SHARES;
+        _totalSupply = INITIAL_SUPPLY;
+        _shareBalances[owner()] = _totalShares;
+        _sharesPerXdef = _totalShares.div(_totalSupply);
+
+        emit Transfer(address(0x0), owner(), _totalSupply);
+    }
+
+    function setTransfersPaused(bool _transfersPaused) external onlyOwner {
         transfersPaused = _transfersPaused;
     }
 
@@ -92,20 +99,14 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         }
     }
 
-    function setRebasesPaused(bool _rebasesPaused)
-        public
-        onlyOwner
-    {
+    function setRebasesPaused(bool _rebasesPaused) public onlyOwner {
         rebasesPaused = _rebasesPaused;
     }
 
     /**
      * @param monetaryPolicy_ The address of the monetary policy contract to use for authentication.
      */
-    function setMonetaryPolicy(address monetaryPolicy_)
-        external
-        onlyOwner
-    {
+    function setMonetaryPolicy(address monetaryPolicy_) external onlyOwner {
         monetaryPolicy = monetaryPolicy_;
         emit LogMonetaryPolicyUpdated(monetaryPolicy_);
     }
@@ -153,41 +154,15 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         return _totalSupply;
     }
 
-    function totalShares()
-        public
-        view
-        returns (uint256)
-    {
+    function totalShares() public view returns (uint256) {
         return _totalShares;
     }
 
-    function sharesOf(address user)
-        external
-        view
-        returns (uint256)
-    {
+    function sharesOf(address user) external view returns (uint256) {
         return _shareBalances[user];
     }
 
-    constructor ()
-        public
-    {
-        __ERC20_init("Xdef finance2", "Xdef2");
-        _setupDecimals(uint8(DECIMALS));
-        __Ownable_init();
-
-        _totalShares = INITIAL_SHARES;
-        _totalSupply = INITIAL_SUPPLY;
-        _shareBalances[owner()] = _totalShares;
-        _sharesPerXdef = _totalShares.div(_totalSupply);
-
-        emit Transfer(address(0x0), owner(), _totalSupply);
-    }
-
-    function setUserBanStatus(address user, bool banned)
-        external
-        onlyOwner
-    {
+    function setUserBanStatus(address user, bool banned) external onlyOwner {
         if (banned) {
             bannedUsers[user] = true;
         } else {
@@ -199,12 +174,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     /**
      * @return The total number of Xdef.
      */
-    function totalSupply()
-        public
-        override
-        view
-        returns (uint256)
-    {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
@@ -212,12 +182,7 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
      * @param who The address to query.
      * @return The balance of the specified address.
      */
-    function balanceOf(address who)
-        public
-        override
-        view
-        returns (uint256)
-    {
+    function balanceOf(address who) public view override returns (uint256) {
         return _shareBalances[who].div(_sharesPerXdef);
     }
 
@@ -229,12 +194,15 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
      */
     function transfer(address to, uint256 value)
         public
-        override(ERC20UpgradeSafe, ERC677)
+        override(ERC677)
         validRecipient(to)
         returns (bool)
     {
         require(bannedUsers[msg.sender] == false, "you are banned");
-        require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
+        require(
+            !transfersPaused || transferPauseExemptList[msg.sender],
+            "paused"
+        );
 
         uint256 shareValue = value.mul(_sharesPerXdef);
         _shareBalances[msg.sender] = _shareBalances[msg.sender].sub(shareValue);
@@ -251,8 +219,8 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
      */
     function allowance(address owner_, address spender)
         public
-        override
         view
+        override
         returns (uint256)
     {
         return _allowedXdef[owner_][spender];
@@ -264,16 +232,20 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
      * @param to The address you want to transfer to.
      * @param value The amount of tokens to be transferred.
      */
-    function transferFrom(address from, address to, uint256 value)
-        public
-        override
-        validRecipient(to)
-        returns (bool)
-    {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) public override validRecipient(to) returns (bool) {
         require(bannedUsers[msg.sender] == false, "you are banned");
-        require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
+        require(
+            !transfersPaused || transferPauseExemptList[msg.sender],
+            "paused"
+        );
 
-        _allowedXdef[from][msg.sender] = _allowedXdef[from][msg.sender].sub(value);
+        _allowedXdef[from][msg.sender] = _allowedXdef[from][msg.sender].sub(
+            value
+        );
 
         uint256 shareValue = value.mul(_sharesPerXdef);
         _shareBalances[from] = _shareBalances[from].sub(shareValue);
@@ -299,7 +271,10 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         override
         returns (bool)
     {
-        require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
+        require(
+            !transfersPaused || transferPauseExemptList[msg.sender],
+            "paused"
+        );
 
         _allowedXdef[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
@@ -318,9 +293,13 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         override
         returns (bool)
     {
-        require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
+        require(
+            !transfersPaused || transferPauseExemptList[msg.sender],
+            "paused"
+        );
 
-        _allowedXdef[msg.sender][spender] = _allowedXdef[msg.sender][spender].add(addedValue);
+        _allowedXdef[msg.sender][spender] = _allowedXdef[msg.sender][spender]
+            .add(addedValue);
         emit Approval(msg.sender, spender, _allowedXdef[msg.sender][spender]);
         return true;
     }
@@ -336,7 +315,10 @@ contract XdefToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         override
         returns (bool)
     {
-        require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
+        require(
+            !transfersPaused || transferPauseExemptList[msg.sender],
+            "paused"
+        );
 
         uint256 oldValue = _allowedXdef[msg.sender][spender];
         if (subtractedValue >= oldValue) {
