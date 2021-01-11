@@ -1,6 +1,6 @@
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./XdefTokenMonetaryPolicy.sol";
 
@@ -10,7 +10,7 @@ import "./XdefTokenMonetaryPolicy.sol";
  * @notice The orchestrator is the main entry point for rebase operations. It coordinates the policy
  * actions with external consumers.
  */
-contract XdefTokenOrchestrator is OwnableUpgradeSafe {
+contract XdefTokenOrchestrator is Ownable {
 
     event TransactionFailed(address indexed destination, uint index, bytes data);
 
@@ -34,7 +34,6 @@ contract XdefTokenOrchestrator is OwnableUpgradeSafe {
     constructor (address policy_)
         public
     {
-        __Ownable_init();
         policy = XdefTokenMonetaryPolicy(policy_);
     }
 

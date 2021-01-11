@@ -1,7 +1,6 @@
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/Initializable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
  
 import "./lib/SafeMathInt.sol";
 import "./lib/UInt256Lib.sol";
@@ -30,7 +29,7 @@ interface IGulp {
  *      This component regulates the token supply of the XdefToken ERC20 token in response to
  *      market oracles.
  */
-contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
+contract XdefTokenMonetaryPolicy is Ownable {
     using SafeMath for uint256;
     using SafeMathInt for int256;
     using UInt256Lib for uint256;

@@ -1,17 +1,11 @@
 pragma solidity 0.6.12;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SimpleOracle is OwnableUpgradeSafe {
+contract SimpleOracle is Ownable {
     uint256 private _value;
     
     event LogValueUpdate(uint256 v);
-
-    constructor() 
-        public 
-    {
-        __Ownable_init();
-    }
 
     function getData()
         public
