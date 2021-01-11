@@ -281,7 +281,6 @@ contract XdefTokenMonetaryPolicy is Ownable {
     constructor (XdefToken Xdef_)
         public
     {
-        __Ownable_init();
 
         deviationThreshold = 0;
         rebaseLag = 1;
@@ -289,7 +288,7 @@ contract XdefTokenMonetaryPolicy is Ownable {
         rebaseWindowOffsetSec = 79200;  // 10PM UTC
         rebaseWindowLengthSec = 60 minutes;
         lastRebaseTimestampSec = 0;
-        deviationThreshold = 50000000000000000;
+        deviationThreshold = 50000000000000000; // 5%
         epoch = 0;
 
         Xdef = Xdef_;
