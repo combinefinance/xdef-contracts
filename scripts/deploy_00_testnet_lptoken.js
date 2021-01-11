@@ -12,7 +12,7 @@ async function main() {
     const lpToken = await upgrades.deployProxy(ERC20UpgradeSafe, [])
     */
     const LPToken = await ethers.getContractFactory('LPToken');
-    const lpToken = await upgrades.deployProxy(LPToken, []);
+    const lpToken = await LPToken.deploy();
     await lpToken.deployed();
 
     console.log('LP token deployed to:', lpToken.address)

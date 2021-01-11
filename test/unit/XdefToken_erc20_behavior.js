@@ -50,7 +50,7 @@ async function setupContractAndAccounts () {
     recipientAddr = await recipient.getAddress()
 
     const XdefToken = await ethers.getContractFactory('XdefToken')
-    xdefToken = await upgrades.deployProxy(XdefToken, [])
+    xdefToken = await XdefToken.deploy()
     await xdefToken.deployed()
     xdefToken = xdefToken.connect(owner)
 }

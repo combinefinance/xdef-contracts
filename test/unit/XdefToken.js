@@ -13,7 +13,7 @@ async function setupContracts() {
     userAddr = await user.getAddress()
 
     const XdefToken = await ethers.getContractFactory('XdefToken')
-    xdefToken = await upgrades.deployProxy(XdefToken, [])
+    xdefToken = await XdefToken.deploy()
     await xdefToken.deployed()
     xdefToken = xdefToken.connect(deployer)
     initialSupply = await xdefToken.totalSupply()

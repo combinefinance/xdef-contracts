@@ -6,9 +6,9 @@ const axios = require('axios');
 async function main() {
     await hre.run('compile')
 
-    const TVL = await fetchTVL();
-    //const TVL = 25619299261.96;
-    const tokenPrice = 0.27;
+    //const TVL = await fetchTVL();
+    const TVL = 25619299261.96;
+    const tokenPrice = 0.21;
 
     const contracts = getSavedContractAddresses()[hre.network.name]
 

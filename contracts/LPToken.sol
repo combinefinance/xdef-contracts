@@ -6,13 +6,11 @@ import "./ERC20UpgradeSafe.sol";
 
 contract LPToken is ERC20UpgradeSafe {
 
-    function initialize()
-        public
-        initializer
+    constructor() 
+        public 
     {
         __ERC20_init("lpToken for Xdef", "lpToken");
         _setupDecimals(uint8(18));
-
     }
 
     function mint(address account, uint256 amount) external {

@@ -32,7 +32,7 @@ async function setupContracts() {
     await waitForSomeTime(p, 86400)
 
     const MockXdefToken = await ethers.getContractFactory('MockXdefToken')
-    mockXdefToken = await upgrades.deployProxy(MockXdefToken, [])
+    mockXdefToken = await MockXdefToken.deploy()
     await mockXdefToken.deployed()
     mockXdefToken = mockXdefToken.connect(deployer)
 
@@ -47,7 +47,7 @@ async function setupContracts() {
     mockTvlOracle = mockTvlOracle.connect(deployer)
 
     const XdefTokenMonetaryPolicy = await ethers.getContractFactory('XdefTokenMonetaryPolicy')
-    xdefTokenMonetaryPolicy = await upgrades.deployProxy(XdefTokenMonetaryPolicy, [mockXdefToken.address])
+    xdefTokenMonetaryPolicy = await XdefTokenMonetaryPolicy.deploy(mockXdefToken.address)
     await xdefTokenMonetaryPolicy.deployed()
     xdefTokenMonetaryPolicy = xdefTokenMonetaryPolicy.connect(deployer)
 
@@ -91,7 +91,7 @@ describe('XdefTokenMonetaryPolicy:initialize', async() => {
             (await xdefTokenMonetaryPolicy.deviationThreshold()).should.equal(BigNumber.from(5).mul(tenTo18th).div(100))
         })
         it('rebaseLag', async() => {
-            (await xdefTokenMonetaryPolicy.rebaseLag()).should.equal(30)
+            (await xdefTokenMonetaryPolicy.rebaseLag()).should.equal(1)
         })
         it('minRebaseTimeIntervalSec', async() => {
             (await xdefTokenMonetaryPolicy.minRebaseTimeIntervalSec()).should.equal(24 * 60 * 60)
@@ -100,10 +100,10 @@ describe('XdefTokenMonetaryPolicy:initialize', async() => {
             (await xdefTokenMonetaryPolicy.epoch()).should.equal(0)
         })
         it('rebaseWindowOffsetSec', async() => {
-            (await xdefTokenMonetaryPolicy.rebaseWindowOffsetSec()).should.equal(72000)
+            (await xdefTokenMonetaryPolicy.rebaseWindowOffsetSec()).should.equal(79200)
         })
         it('rebaseWindowLengthSec', async() => {
-            (await xdefTokenMonetaryPolicy.rebaseWindowLengthSec()).should.equal(900)
+            (await xdefTokenMonetaryPolicy.rebaseWindowLengthSec()).should.equal(3600)
         })
         it('should set owner', async() => {
             expect(await xdefTokenMonetaryPolicy.owner()).to.equal(deployerAddr)

@@ -8,7 +8,7 @@ async function main() {
     const contracts = getSavedContractAddresses()[hre.network.name]
 
     const xdefTokenMonetaryPolicy = await ethers.getContractAt('XdefTokenMonetaryPolicy', contracts.xdefTokenMonetaryPolicy);
-    const inRebaseWindow = await xdefTokenMonetaryPolicy.inRebaseWindow();
+    const inRebaseWindow = true;//await xdefTokenMonetaryPolicy.inRebaseWindow();
     if (inRebaseWindow) {
         const xdefTokenOrchestrator = await ethers.getContractAt('XdefTokenOrchestrator', contracts.xdefTokenOrchestrator);
         (await xdefTokenOrchestrator.rebase()).wait();

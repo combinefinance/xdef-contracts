@@ -23,7 +23,7 @@ task('accounts', 'Prints the list of accounts', async() => {
 // defaultNetwork, networks, solc, and paths.
 // Go to https://hardhat.org/config/ to learn more
 module.exports = {
-    defaultNetwork: 'rinkeby',
+    defaultNetwork: 'localhost',
     networks: {
         localhost: {
             url: "http://127.0.0.1:8545"
