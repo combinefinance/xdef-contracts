@@ -290,6 +290,7 @@ contract XdefTokenMonetaryPolicy is OwnableUpgradeSafe {
         rebaseWindowOffsetSec = 79200;  // 10PM UTC
         rebaseWindowLengthSec = 60 minutes;
         lastRebaseTimestampSec = 0;
+        deviationThreshold = 50000000000000000;
         epoch = 0;
 
         Xdef = Xdef_;
