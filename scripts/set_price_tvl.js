@@ -6,9 +6,14 @@ const axios = require('axios');
 async function main() {
     await hre.run('compile')
 
-    //const TVL = await fetchTVL();
-    const TVL = 25619299261.96;
-    const tokenPrice = 0.21;
+    const TVL = await fetchTVL();
+    //console.log(TVL)
+    //return 
+
+    //const TVL = 25249652574.364998;
+    const tokenPrice = 0.11;
+
+    console.log(`Pushing new values: TVL: ${TVL}, tokenPrice: ${tokenPrice}`);
 
     const contracts = getSavedContractAddresses()[hre.network.name]
 
@@ -16,8 +21,8 @@ async function main() {
     const tokenPriceOracle = await ethers.getContractAt('SimpleOracle', contracts.tokenPriceOracle);
     const owner = await tvlOracle.owner();
     console.log('owner:', owner);
-    (await tvlOracle.storeData(BigInt(TVL*1e18))).wait();
-    (await tokenPriceOracle.storeData(BigInt(tokenPrice*1e18))).wait();
+    await (await tvlOracle.storeData(BigInt(TVL*1e18))).wait();
+    await (await tokenPriceOracle.storeData(BigInt(tokenPrice*1e18))).wait();
     console.log(`New values are set. TVL: ${TVL}, tokenPrice: ${tokenPrice}`);
 }
 
