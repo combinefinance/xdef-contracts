@@ -2,25 +2,28 @@
 pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./lib/UsingTellor.sol";
 
+interface ITellorLens {
+      function getDataBefore(uint256 _requestId, uint256 _timestamp)
+        external
+        view
+      returns (bool _ifRetrieve, uint256 _value, uint256 _timestampRetrieved);
+}
 
-contract TvlOracle is UsingTellor, Ownable {
+contract TvlOracle is Ownable {
 
   //This Contract now have access to all functions on UsingTellor
 
   uint256 requestId;
-  uint8   public externalOracleDecimals;
-  uint8   public desiredDecimals;
-  uint256 public delay = 30 minutes;
-  uint256 public maxAge = 3 hours;
+  uint256 public delay = 1 hours;
+  uint256 public maxAge = 5 hours;
+  ITellorLens tellorLens;
 
-  constructor(address payable _tellorAddress, uint256 _requestId) UsingTellor(_tellorAddress) 
+  constructor(address payable _tellorLensAddress, uint256 _requestId) 
     public 
   {
+    tellorLens = ITellorLens(_tellorLensAddress);
     requestId = _requestId;
-    externalOracleDecimals = 6;
-    desiredDecimals = 18;
   }
 
   function getData() 
@@ -28,27 +31,24 @@ contract TvlOracle is UsingTellor, Ownable {
     view
     returns (uint256, bool)
   {
-    bool _didGet;
-    uint _timestamp;
-    uint256 _value;
 
-    (_didGet, _value, _timestamp) = getDataBefore(requestId, now - delay);
+    (bool _didGet, uint256 _value, uint256 _timestamp) = tellorLens.getDataBefore(requestId, now - delay);
 
-    _value = _value * (10 ** (uint256(desiredDecimals - externalOracleDecimals)));
+    _value = _value * 1e12; // Tellor gives us 6 decimals, we need 18
     bool dataIsFresh = now - _timestamp < maxAge;
 
     return (_value, _didGet && dataIsFresh);
   }
 
   function setDelay(uint256 newDelay) 
-    public 
+    external 
     onlyOwner 
   {
     delay = newDelay;
   }
 
   function setMaxAge(uint256 newMaxAge) 
-    public 
+    external 
     onlyOwner 
   {
     maxAge = newMaxAge;

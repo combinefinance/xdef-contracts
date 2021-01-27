@@ -5,9 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./lib/SafeMathInt.sol";
 import "./lib/UInt256Lib.sol";
 import "./XdefToken.sol";
+import "hardhat/console.sol";
 
 interface IOracle {
     function getData() external view returns (uint256, bool);
+    function update() external;
 }
 
 interface ISync {
@@ -41,8 +43,11 @@ contract XdefTokenMonetaryPolicy is Ownable {
         int256 requestedSupplyAdjustment,
         uint256 timestampSec
     );
+    event Incentivization(address indexed account, uint256 amount);
 
     XdefToken public Xdef;
+
+    uint256 public incentiveLimit = 200 * 1e9;
 
     // Provides the current market cap, as an 18 decimal fixed point number.
     IOracle public tvlOracle;
@@ -86,9 +91,6 @@ contract XdefTokenMonetaryPolicy is Ownable {
     // MAX_SUPPLY = MAX_INT256 / MAX_RATE
     uint256 private constant MAX_SUPPLY = ~(uint256(1) << 255) / MAX_RATE;
 
-    // This module orchestrates the rebase execution and downstream notification.
-    address public orchestrator;
-
     address[] public unipairs;
 
     function setXdefToken(address _Xdef)
@@ -106,22 +108,29 @@ contract XdefTokenMonetaryPolicy is Ownable {
      *      and targetPrice is TvlOracleRate / xdefTvl
      */
     function rebase() external {
-        require(msg.sender == orchestrator, "you are not the orchestrator");
+        //require(msg.sender == orchestrator, "you are not the orchestrator");
         require(inRebaseWindow(), "the rebase window is closed");
 
         // This comparison also ensures there is no reentrancy.
         require(lastRebaseTimestampSec.add(minRebaseTimeIntervalSec) < now, "cannot rebase yet");
+
+        uint256 incentive = calcIncentive();
+        if (incentive > 0) {
+            Xdef.transfer(msg.sender, incentive); // before rebase()
+            emit Incentivization(msg.sender, incentive);
+        }
 
         // Snap the rebase time to the start of this window.
         lastRebaseTimestampSec = now.sub(now.mod(minRebaseTimeIntervalSec)).add(rebaseWindowOffsetSec);
 
         epoch = epoch.add(1);
 
-        int256 supplyDelta;
-        uint256 tvl;
-        uint256 tokenPrice;
-        (supplyDelta, tvl, tokenPrice) = getNextSupplyDelta();
+        (int256 supplyDelta, uint256 tvl, uint256 tokenPrice) = getNextSupplyDelta();
+
+
+
         if (supplyDelta == 0) {
+            tokenPriceOracle.update();
             emit LogRebase(epoch, tokenPrice, tvl, supplyDelta, now);
             return;
         }
@@ -133,12 +142,34 @@ contract XdefTokenMonetaryPolicy is Ownable {
         uint256 supplyAfterRebase = Xdef.rebase(epoch, supplyDelta);
         assert(supplyAfterRebase <= MAX_SUPPLY);
         sync();
+
+        tokenPriceOracle.update();
+        
         emit LogRebase(epoch, tokenPrice, tvl, supplyDelta, now);
     }
 
+
+    function calcIncentive() public view returns (uint256 incentive) {
+        if (inRebaseWindow() && now > lastRebaseTimestampSec.add(minRebaseTimeIntervalSec)) {
+            uint256 xdefBalance = Xdef.balanceOf(address(this));
+            uint256 realLimit = xdefBalance <= incentiveLimit ? xdefBalance : incentiveLimit;
+            uint256 auction_price = now.mod(minRebaseTimeIntervalSec).sub(rebaseWindowOffsetSec).div(5).mul(1e9); 
+            incentive = auction_price <= realLimit ? auction_price : realLimit;
+        } else { 
+            incentive = 0;
+        }
+        return incentive;
+    }
+
+    function withdrawTokens (uint256 amount) 
+        external 
+        onlyOwner 
+    {   
+        Xdef.transfer(msg.sender, amount);
+    }
+
     function getNextSupplyDelta()
-        public
-        view
+        public view
         returns (int256 supplyDelta, uint256 tvl, uint256 tokenPrice)
     {
         uint256 tvl;
@@ -210,15 +241,11 @@ contract XdefTokenMonetaryPolicy is Ownable {
         tokenPriceOracle = tokenPriceOracle_;
     }
 
-    /**
-     * @notice Sets the reference to the orchestrator.
-     * @param orchestrator_ The address of the orchestrator contract.
-     */
-    function setOrchestrator(address orchestrator_)
+    function setIncentiveLimit(uint256 newIncentiveLimit)
         external
         onlyOwner
     {
-        orchestrator = orchestrator_;
+        incentiveLimit = newIncentiveLimit;
     }
 
     /**
@@ -277,15 +304,13 @@ contract XdefTokenMonetaryPolicy is Ownable {
         rebaseWindowLengthSec = rebaseWindowLengthSec_;
     }
 
-
     constructor (XdefToken Xdef_)
         public
     {
-
         deviationThreshold = 0;
         rebaseLag = 1;
         minRebaseTimeIntervalSec = 1 days;
-        rebaseWindowOffsetSec = 79200;  // 10PM UTC
+        rebaseWindowOffsetSec = 36000;  // 10:00 UTC
         rebaseWindowLengthSec = 60 minutes;
         lastRebaseTimestampSec = 0;
         deviationThreshold = 50000000000000000; // 5%
